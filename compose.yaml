@@ -1,0 +1,12 @@
+name: ksef-validator-fe
+
+services:
+  web:
+    build:
+      context: .
+    image: ksef-validator-web:local
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8090}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp

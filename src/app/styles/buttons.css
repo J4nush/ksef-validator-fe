@@ -1,0 +1,16 @@
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 16px;
+  border: 1px solid var(--c-border-strong); border-radius: var(--r-sm);
+  background: transparent; color: var(--c-text);
+  font-size: 15px; font-weight: 500; line-height: 1.2; white-space: nowrap;
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.btn:hover { background: var(--c-surface-2); }
+.btn--primary { background: var(--c-primary); border-color: var(--c-primary); color: var(--c-primary-ink); }
+.btn--primary:hover { background: var(--c-primary-hover); border-color: var(--c-primary-hover); }
+.btn--quiet { border-color: transparent; color: var(--c-muted); padding-inline: 8px; }
+.btn--quiet:hover { background: transparent; color: var(--c-text); }
+@media (min-width: 1024px) and (pointer: fine) {
+  .btn { min-height: 40px; }
+}
