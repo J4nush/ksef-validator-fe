@@ -18,10 +18,12 @@
     "check:inline": "node scripts/check-inline.mjs dist",
     "sync:contract": "node scripts/contract.mjs sync",
     "check:contract": "node scripts/contract.mjs check",
-    "gen:api": "openapi-typescript contract/openapi.json --output src/api/schema.d.ts"
+    "gen:api": "openapi-typescript contract/openapi.json --output src/api/schema.d.ts",
+    "test:e2e:stack": "playwright test --config playwright.stack.config.ts"
   },
   "dependencies": {
     "@unhead/vue": "^2.1.17",
+    "lean-qr": "^2.7.4",
     "vue": "^3.5.45",
     "vue-router": "^5.5.0"
   },
@@ -49,7 +51,8 @@
     "vite-ssg": "^28.3.0",
     "vitest": "^5.1.0",
     "vue-eslint-parser": "^10.4.2",
-    "vue-tsc": "^3.3.14"
+    "vue-tsc": "^3.3.14",
+    "zxing-wasm": "^3.1.6"
   },
   "engines": {
     "node": ">=22.12"

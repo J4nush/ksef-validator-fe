@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "1.1",
+  "engineVersion": "0.3.0",
+  "ruleset": "fa3-1-0E-2026-11.2",
+  "source": {
+    "ksefApiCommit": "ce3670ea042de380039de4c5849fd6455811b292",
+    "xsdSha256": "b646b6b525f51adf1bb2545f111fc8ca6e7aa6dd2f98948f1667d3695c06d958"
+  },
+  "result": "ERRORS",
+  "document": {
+    "type": null,
+    "variant": null,
+    "schema": null,
+    "sizeBytes": 37,
+    "sha256Base64Url": "74Rruwg51kjcEiFmN3cv9LZONsyhB5QtXmGuQ7FQMlw"
+  },
+  "summary": {
+    "errors": 1,
+    "warnings": 0,
+    "info": 0,
+    "skippedChecks": 0
+  },
+  "stages": [
+    {
+      "id": "security",
+      "status": "errors"
+    },
+    {
+      "id": "recognition",
+      "status": "not_run"
+    },
+    {
+      "id": "schema",
+      "status": "not_run"
+    },
+    {
+      "id": "rules",
+      "status": "not_run"
+    },
+    {
+      "id": "amounts",
+      "status": "not_run"
+    }
+  ],
+  "findings": [
+    {
+      "id": "XML-MALFORMED",
+      "severity": "ERROR",
+      "stage": "security",
+      "title": "Uszkodzony plik XML",
+      "field": null,
+      "line": 1,
+      "message": "Pliku nie da się odczytać jako XML. Może być uszkodzony, ucięty albo mieć zbyt głęboko zagnieżdżone elementy.",
+      "fix": "Sprawdź wskazaną linię albo wygeneruj fakturę ponownie w programie do fakturowania.",
+      "docsUrl": "/ksef/bledy/uszkodzony-xml",
+      "params": {}
+    }
+  ],
+  "skipped": []
+}

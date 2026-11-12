@@ -1,0 +1,536 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "KSeF FA(3) validator API",
+    "version": "1.0.0",
+    "description": "Checks a KSeF FA(3) e-invoice. The file is validated in memory and is not stored or logged. Every validation result, including errors and unsupported documents, is returned with status 200.",
+    "license": {
+      "name": "MIT",
+      "identifier": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "paths": {
+    "/api/internal/validate": {
+      "post": {
+        "operationId": "validateInvoice",
+        "summary": "Validate an FA(3) invoice",
+        "description": "Checks are applied in this order: rate limit, content type, size, validation. Every request counts towards the rate limit, including rejected ones.",
+        "requestBody": {
+          "required": true,
+          "description": "Raw bytes of the invoice file, at most 3000000 bytes.",
+          "content": {
+            "application/xml": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "application/xml"
+              }
+            },
+            "text/xml": {
+              "schema": {
+                "type": "string",
+                "contentMediaType": "text/xml"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation report for any engine result.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Report"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "405": {
+            "$ref": "#/components/responses/MethodNotAllowed"
+          },
+          "413": {
+            "$ref": "#/components/responses/PayloadTooLarge"
+          },
+          "415": {
+            "$ref": "#/components/responses/UnsupportedMediaType"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Report": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "title": "KSeF FA(3) validation report",
+        "description": "Report produced by ksef-fa3-validator, format 1.1.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schemaVersion",
+          "engineVersion",
+          "ruleset",
+          "source",
+          "result",
+          "document",
+          "summary",
+          "stages",
+          "findings",
+          "skipped"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "const": "1.1"
+          },
+          "engineVersion": {
+            "type": "string",
+            "pattern": "^\\d+\\.\\d+\\.\\d+$"
+          },
+          "ruleset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "ksefApiCommit",
+              "xsdSha256"
+            ],
+            "properties": {
+              "ksefApiCommit": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{40}$"
+              },
+              "xsdSha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "result": {
+            "enum": [
+              "PASSED",
+              "WARNINGS",
+              "ERRORS",
+              "UNSUPPORTED"
+            ]
+          },
+          "document": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "type",
+              "variant",
+              "schema",
+              "sizeBytes",
+              "sha256Base64Url"
+            ],
+            "properties": {
+              "type": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variant": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "schema": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sizeBytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sha256Base64Url": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9_-]{43}$"
+              }
+            }
+          },
+          "summary": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "errors",
+              "warnings",
+              "info",
+              "skippedChecks"
+            ],
+            "properties": {
+              "errors": {
+                "$ref": "#/components/schemas/Report/$defs/count"
+              },
+              "warnings": {
+                "$ref": "#/components/schemas/Report/$defs/count"
+              },
+              "info": {
+                "$ref": "#/components/schemas/Report/$defs/count"
+              },
+              "skippedChecks": {
+                "$ref": "#/components/schemas/Report/$defs/count"
+              }
+            }
+          },
+          "stages": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "$ref": "#/components/schemas/Report/$defs/layerResult",
+                "properties": {
+                  "id": {
+                    "const": "security"
+                  },
+                  "status": {
+                    "not": {
+                      "const": "unsupported"
+                    }
+                  }
+                }
+              },
+              {
+                "$ref": "#/components/schemas/Report/$defs/layerResult",
+                "properties": {
+                  "id": {
+                    "const": "recognition"
+                  }
+                }
+              },
+              {
+                "$ref": "#/components/schemas/Report/$defs/layerResult",
+                "properties": {
+                  "id": {
+                    "const": "schema"
+                  },
+                  "status": {
+                    "not": {
+                      "const": "unsupported"
+                    }
+                  }
+                }
+              },
+              {
+                "$ref": "#/components/schemas/Report/$defs/layerResult",
+                "properties": {
+                  "id": {
+                    "const": "rules"
+                  },
+                  "status": {
+                    "not": {
+                      "const": "unsupported"
+                    }
+                  }
+                }
+              },
+              {
+                "$ref": "#/components/schemas/Report/$defs/layerResult",
+                "properties": {
+                  "id": {
+                    "const": "amounts"
+                  },
+                  "status": {
+                    "not": {
+                      "const": "unsupported"
+                    }
+                  }
+                }
+              }
+            ],
+            "items": false,
+            "minItems": 5
+          },
+          "findings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Report/$defs/finding"
+            }
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Report/$defs/skippedCheck"
+            }
+          }
+        },
+        "$defs": {
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "ruleId": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]+(-[A-Z0-9]+)*$"
+          },
+          "layer": {
+            "enum": [
+              "security",
+              "recognition",
+              "schema",
+              "rules",
+              "amounts"
+            ]
+          },
+          "layerResult": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Report/$defs/layer"
+              },
+              "status": {
+                "enum": [
+                  "passed",
+                  "warnings",
+                  "errors",
+                  "unsupported",
+                  "not_run",
+                  "not_checked"
+                ]
+              }
+            }
+          },
+          "finding": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "severity",
+              "stage",
+              "title",
+              "field",
+              "line",
+              "message",
+              "fix",
+              "docsUrl",
+              "params"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Report/$defs/ruleId"
+              },
+              "severity": {
+                "enum": [
+                  "ERROR",
+                  "WARNING",
+                  "INFO"
+                ]
+              },
+              "stage": {
+                "$ref": "#/components/schemas/Report/$defs/layer"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1
+              },
+              "line": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "fix": {
+                "type": "string",
+                "minLength": 1
+              },
+              "docsUrl": {
+                "type": "string",
+                "pattern": "^/ksef/bledy/[a-z0-9-]+$"
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "skippedCheck": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "stage",
+              "message"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/components/schemas/Report/$defs/ruleId"
+              },
+              "stage": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Report/$defs/layer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "description": "Problem details as defined in RFC 9457.",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri-reference",
+            "pattern": "^/api/problems/[a-z-]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "headers": {
+      "RetryAfter": {
+        "description": "Seconds to wait before the next request.",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "Allow": {
+        "description": "Methods accepted by the endpoint.",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "const": "POST"
+        }
+      }
+    },
+    "responses": {
+      "NotFound": {
+        "description": "No API resource at this path.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "MethodNotAllowed": {
+        "description": "The endpoint accepts only POST.",
+        "headers": {
+          "Allow": {
+            "$ref": "#/components/headers/Allow"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "PayloadTooLarge": {
+        "description": "The declared Content-Length or the body exceeds 3000000 bytes.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "UnsupportedMediaType": {
+        "description": "Content-Type is not application/xml or text/xml.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "The per-minute or per-day limit for the client address is exceeded.",
+        "headers": {
+          "Retry-After": {
+            "$ref": "#/components/headers/RetryAfter"
+          }
+        },
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Unexpected server error. The response carries no details.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    }
+  }
+}

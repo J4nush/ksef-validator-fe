@@ -64,7 +64,7 @@ test('starts dark and remembers light only after a click', async ({ page }) => {
 
   await toggle.click()
   await expect(html).toHaveClass(/\blight\b/)
-  await expect(page.getByRole('status')).toContainText('Zapamiętaliśmy jasny motyw w tej przeglądarce.')
+  await expect(page.getByRole('banner').getByRole('status')).toContainText('Zapamiętaliśmy jasny motyw w tej przeglądarce.')
   expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('light')
 
   await page.reload()
@@ -72,7 +72,7 @@ test('starts dark and remembers light only after a click', async ({ page }) => {
 
   await page.getByRole('button', { name: /Przełącz motyw/ }).click()
   await expect(html).not.toHaveClass(/\blight\b/)
-  await expect(page.getByRole('status')).toHaveText('Wróciliśmy do ciemnego motywu i usunęliśmy zapisany wybór.')
+  await expect(page.getByRole('banner').getByRole('status')).toHaveText('Wróciliśmy do ciemnego motywu i usunęliśmy zapisany wybór.')
   expect(await page.evaluate(() => localStorage.length)).toBe(0)
 })
 
