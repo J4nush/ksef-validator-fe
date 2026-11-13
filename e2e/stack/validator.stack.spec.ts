@@ -10,6 +10,8 @@ import {
   fixtureReport,
   markedInvoice,
 } from '../support/invoice'
+import { largeInvoice } from '../support/largeInvoice'
+import { downloadPdf, readPdf } from '../support/pdf'
 import { decodeQr } from '../support/qr'
 import {
   TOOL_HEADING,
@@ -50,6 +52,8 @@ test.describe('validator against the running API', () => {
       [example(EXAMPLE_ERRORS), 'report-errors.json'],
       [example(EXAMPLE_CLEAN), 'report-ok.json'],
       [fixture('faktura-z-ostrzezeniem.xml'), 'report-warnings.json'],
+      [fixture('faktura-korygujaca.xml'), 'report-correction.json'],
+      [largeInvoice(), 'report-large.json'],
       [fixture('faktura-fa2.xml'), 'report-fa2.json'],
       [fixture('notatka.txt'), 'report-malformed.json'],
     ] as const
@@ -208,6 +212,24 @@ test.describe('validator against the running API', () => {
     await expect(verificationLinkText(page)).toHaveText(expectedLink(invoice.bytes))
     await expectNothingStored(page, invoice.marker)
     expect(watch.messages.join('\n')).not.toContain(invoice.marker)
+    await watch.expectClean()
+  })
+
+  test('downloads the PDF of the clean example without sending anything', async ({ page }) => {
+    const watch = await watchPage(page)
+    const calls = countApiCalls(page)
+    await openTool(page)
+    await page.getByRole('button', { name: 'Przykład bez błędów' }).click()
+    await expect(resultHeading(page)).toHaveText('Plik przeszedł kontrolę techniczną')
+
+    const pdf = await downloadPdf(page)
+
+    expect(pdf.name).toBe('wizualizacja-FV-2026-11-0001.pdf')
+    expect(calls).toEqual(['POST'])
+    expect(pdf.requests.every(({ method, url }) => method === 'GET' && new URL(url).pathname.startsWith('/assets/'))).toBe(true)
+    const content = await readPdf(pdf.bytes)
+    expect(content.text).toContain('Przykładowy Sprzedawca Sp. z o.o.')
+    expect(content.links).toEqual([expectedLink(example(EXAMPLE_CLEAN))])
     await watch.expectClean()
   })
 })

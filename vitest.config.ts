@@ -12,7 +12,16 @@ export default mergeConfig(
             name: 'app',
             environment: 'jsdom',
             include: ['src/**/*.spec.ts'],
-            exclude: [...configDefaults.exclude, 'e2e/**'],
+            exclude: [...configDefaults.exclude, 'e2e/**', 'src/pdf/**'],
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'pdf',
+            environment: 'node',
+            include: ['src/pdf/**/*.spec.ts'],
+            setupFiles: ['src/pdf/__tests__/setup.ts'],
           },
         },
         {

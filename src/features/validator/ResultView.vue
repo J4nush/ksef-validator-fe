@@ -5,6 +5,8 @@ import { formatNumber } from '@/domain/format'
 import { readInvoice } from '@/domain/invoiceReader'
 import { linkAvailability, verificationLink, type KsefEnvironment } from '@/domain/verificationLink'
 import type { InvoiceFile } from '@/domain/validatorMachine'
+import { pdfFileName } from '@/pdf/fileName'
+import { downloadBlob } from './download'
 import FindingList from './FindingList.vue'
 import InvoiceSheet from './InvoiceSheet.vue'
 import LayerRun from './LayerRun.vue'
@@ -25,6 +27,8 @@ const pad = (value: number) => String(value).padStart(2, '0')
 const checkedAtText = `${pad(checkedAt.getDate())}.${pad(checkedAt.getMonth() + 1)}.${checkedAt.getFullYear()} ${pad(checkedAt.getHours())}:${pad(checkedAt.getMinutes())}`
 
 const environment = ref<KsefEnvironment>('PROD')
+const ksefNumber = ref<string | null>(null)
+const creatingPdf = ref(false)
 const said = ref('')
 
 const result = computed(() => props.report.result)
@@ -35,6 +39,7 @@ const read = computed(() => readInvoice(props.file.bytes))
 const invoice = computed(() => (read.value.ok ? read.value.invoice : null))
 const recognised = computed(() => props.report.stages.some((stage) => stage.id === 'recognition' && stage.status === 'passed'))
 const showCards = computed(() => result.value !== 'UNSUPPORTED' && recognised.value && invoice.value !== null)
+const offersPdf = computed(() => result.value === 'PASSED' || result.value === 'WARNINGS')
 const showList = computed(() => result.value !== 'UNSUPPORTED' && props.report.findings.length > 0)
 const link = computed(() => {
   const seller = invoice.value?.seller.nip
@@ -51,6 +56,22 @@ function selectLink() {
   range.selectNodeContents(target)
   selection.removeAllRanges()
   selection.addRange(range)
+}
+
+async function downloadPdf() {
+  if (creatingPdf.value) return
+  creatingPdf.value = true
+  said.value = 'Tworzę PDF.'
+  try {
+    const { createInvoicePdf } = await import('@/pdf/invoicePdf')
+    const pdf = await createInvoicePdf(props.file.bytes, { link: link.value, ksefNumber: ksefNumber.value })
+    downloadBlob(pdf, pdfFileName(invoice.value?.number ?? null))
+    said.value = 'Pobieranie PDF rozpoczęte.'
+  } catch {
+    said.value = 'Nie udało się utworzyć PDF. Wynik i link działają bez zmian.'
+  } finally {
+    creatingPdf.value = false
+  }
 }
 
 async function copyLink() {
@@ -96,13 +117,17 @@ async function copyLink() {
         <div class="res__acts">
           <button v-if="result === 'ERRORS'" class="btn btn--primary" type="button" @click="emit('newFile')">Sprawdź poprawiony plik</button>
           <template v-else>
-            <button v-if="link" class="btn btn--primary" type="button" @click="copyLink">Skopiuj link</button>
-            <button class="btn" :class="{ 'btn--primary': !link }" type="button" @click="emit('newFile')">Nowy plik</button>
+            <button v-if="offersPdf" class="btn btn--primary" type="button" :disabled="creatingPdf" @click="downloadPdf">
+              {{ creatingPdf ? 'Tworzę PDF' : 'Pobierz PDF' }}
+            </button>
+            <button v-if="link" class="btn" type="button" @click="copyLink">Skopiuj link</button>
+            <button class="btn" :class="{ 'btn--primary': !offersPdf }" type="button" @click="emit('newFile')">Nowy plik</button>
           </template>
           <button class="btn" type="button" @click="reportJson?.open()">Raport JSON</button>
         </div>
       </div>
       <p class="say" role="status">{{ said }}</p>
+      <p v-if="!offersPdf" class="res__note small muted">PDF utworzysz po poprawieniu błędów.</p>
       <div class="res__line">
         <span v-if="result === 'PASSED'" class="count sev" data-sev="ok"><StatusIcon name="ok" />{{ countErrors(0) }}, {{ countWarnings(0) }}</span>
         <template v-else>
@@ -122,7 +147,7 @@ async function copyLink() {
     <FindingList v-if="showList" :findings="report.findings" :skipped="report.skipped" :bytes="file.bytes" />
     <div v-if="showCards && invoice" class="ok">
       <InvoiceSheet :invoice="invoice" :bytes="file.bytes" :hash="hash" />
-      <VerificationPanel v-model:environment="environment" :report="report" :invoice="invoice" :hash="hash" :file-name="file.name" />
+      <VerificationPanel v-model:environment="environment" v-model:ksef-number="ksefNumber" :report="report" :invoice="invoice" :hash="hash" :file-name="file.name" />
     </div>
   </div>
   <div class="wrap after">

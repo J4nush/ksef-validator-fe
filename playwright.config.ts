@@ -17,6 +17,7 @@ export default defineConfig({
   use: {
     baseURL: externalBaseUrl ?? `http://localhost:${previewPort}`,
     trace: 'on-first-retry',
+    reducedMotion: 'reduce',
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

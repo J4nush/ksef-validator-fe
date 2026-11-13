@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from 'vue'
 import type { Report } from '@/api/report'
+import { downloadBlob } from './download'
 import StatusIcon from './StatusIcon.vue'
 
 const props = defineProps<{ report: Report }>()
@@ -18,12 +19,7 @@ defineExpose({
 })
 
 function download() {
-  const url = URL.createObjectURL(new Blob([text.value], { type: 'application/json' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = 'raport-walidacji.json'
-  link.click()
-  setTimeout(() => URL.revokeObjectURL(url), 0)
+  downloadBlob(new Blob([text.value], { type: 'application/json' }), 'raport-walidacji.json')
   said.value = 'Pobieranie raportu rozpoczęte.'
 }
 

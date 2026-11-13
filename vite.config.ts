@@ -21,6 +21,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@shared': fileURLToPath(new URL('./vendor/ksef-pdf-generator/src/shared', import.meta.url)),
+      'ksef-pdf-generator': fileURLToPath(new URL('./vendor/ksef-pdf-generator/src', import.meta.url)),
     },
   },
   build: {

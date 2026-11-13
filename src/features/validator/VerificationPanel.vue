@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Report } from '@/api/report'
 import type { InvoiceData } from '@/domain/invoiceReader'
 import { checkKsefNumber, ksefNumberFromFileName, type KsefNumberCheck } from '@/domain/ksefNumber'
@@ -9,6 +9,7 @@ import StatusIcon from './StatusIcon.vue'
 
 const props = defineProps<{ report: Report; invoice: InvoiceData | null; hash: string; fileName: string }>()
 const environment = defineModel<KsefEnvironment>('environment', { required: true })
+const ksefNumber = defineModel<string | null>('ksefNumber', { default: null })
 
 const ENVIRONMENTS: { value: KsefEnvironment; label: string }[] = [
   { value: 'PROD', label: 'Produkcyjne' },
@@ -37,6 +38,7 @@ const message = computed(() => {
 })
 
 const number = computed(() => (checked.value?.valid ? checked.value.value : null))
+watch(number, (value) => (ksefNumber.value = value))
 const error = computed(() => {
   const check = checked.value
   if (check === null || check.valid || check.reason === 'empty') return null

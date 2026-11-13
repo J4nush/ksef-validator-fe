@@ -23,9 +23,12 @@
   },
   "dependencies": {
     "@unhead/vue": "^2.1.17",
+    "i18next": "^27.1.1",
     "lean-qr": "^2.7.4",
+    "pdfmake": "^0.3.14",
     "vue": "^3.5.45",
-    "vue-router": "^5.5.0"
+    "vue-router": "^5.5.0",
+    "xml-js": "^1.6.11"
   },
   "devDependencies": {
     "@apidevtools/json-schema-ref-parser": "^16.0.7",
@@ -45,6 +48,7 @@
     "jiti": "^2.7.0",
     "jsdom": "^31.0.0",
     "openapi-typescript": "^7.13.0",
+    "pdfjs-dist": "^6.5.438",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.2",
     "vite": "^8.3.8",

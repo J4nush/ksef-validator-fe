@@ -241,6 +241,7 @@
 .vlink { display: block; padding: 8px 10px; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: var(--r-sm); }
 .say { font-size: 14px; color: var(--c-muted); min-height: 1.5em; margin-top: 8px; }
 .say:empty { display: none; }
+.res__note { margin-top: 8px; }
 .sheet .tech { margin-top: -8px; margin-bottom: -8px; border-top: 0; }
 .after { padding-bottom: 32px; }
 .after__row { display: grid; gap: 4px; padding-block: 12px; border-block: 1px solid var(--c-border); }
