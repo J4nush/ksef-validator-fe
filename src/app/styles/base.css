@@ -65,7 +65,7 @@ html { scrollbar-color: var(--c-border-strong) transparent; }
 .sev { color: var(--sev); }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 1ms !important; animation: none !important; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
 }
 @media print {
   .bar, .run, .fl__head button, .res__acts { display: none; }
